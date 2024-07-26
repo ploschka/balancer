@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  # Nginx container
+  webserver:
+    image: ploshka/symfony-nginx:latest
+    container_name: webserver
+    volumes:
+      - ./:/app:ro
+    ports:
+      - 80:80    
+    networks:
+      - app-network
+
+  # PHP-fpm container
+  app:
+    image: ploshka/symfony-app:latest
+    container_name: app
+    volumes:
+      - ./:/app:rw
+    networks:
+      - app-network
+    command: dev
+
+  # MySQL container
+  database:
+    image: mysql:8.3.0
+    container_name: database
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+    ports:
+      - 3306:3306
+    volumes:
+      - database_data:/var/lib/mysql:rw
+    networks:
+        - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+volumes:
+  database_data:
+
+networks:
+  app-network:
+    driver: bridge
+
