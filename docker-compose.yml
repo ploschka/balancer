@@ -6,7 +6,7 @@ services:
     image: mysql:8.3.0
     container_name: database
     env_file:
-      - path: ./db.dev.env
+      - path: ./db.env
         required: true
       - path: ./db.prod.env
         required: false
