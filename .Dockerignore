@@ -1,0 +1,15 @@
+bin
+build
+docker-compose*
+.Dockerignore
+.env.local
+.env.local.php
+.env.*.local
+!.env.prod.local
+public/bundles
+var
+vendor
+.git
+.gitignore
+symfony.lock
+

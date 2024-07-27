@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  # Nginx container
+  webserver:
+    image: ploshka/symfony-nginx:latest
+    container_name: webserver
+    volumes:
+      - ./:/app:ro
+    ports:
+      - 80:80    
+    networks:
+      - app-network
+
+  # PHP-fpm container
+  app:
+    build:
+      context: ./
+      dockerfile: build/app.Dockerfile
+    image: balancer:latest
+    container_name: app
+    volumes:
+      - ./:/app:rw
+    networks:
+      - app-network
+
