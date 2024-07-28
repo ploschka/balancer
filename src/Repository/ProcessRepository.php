@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Process;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -21,13 +22,16 @@ class ProcessRepository extends ServiceEntityRepository
      */
     public function findOneBySpecs(int $memory, int $cpus): ?Process
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.memory <= :mem')
+        $qb = $this->createQueryBuilder('p');
+        return $qb->andWhere('p.memory <= :mem')
             ->setParameter('mem', $memory)
             ->andWhere('p.cpus <= :cs')
             ->setParameter('cs', $cpus)
+            ->leftJoin('p.machine', 'm', Join::WITH, $qb->expr()->eq('m.process', 'p'))
+            ->andWhere('m.id is NULL')
             ->orderBy('p.memory', 'DESC')
             ->addOrderBy('p.cpus', 'DESC')
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult()
         ;

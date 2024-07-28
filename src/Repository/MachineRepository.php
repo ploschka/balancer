@@ -21,13 +21,15 @@ class MachineRepository extends ServiceEntityRepository
      */
     public function findOneBySpecs(int $memory, int $cpus): ?Machine
     {
-        return $this->createQueryBuilder('m')
-            ->andWhere('m.memory >= :mem')
+        $qb = $this->createQueryBuilder('m');
+        return $qb->andWhere('m.memory >= :mem')
             ->setParameter('mem', $memory)
             ->andWhere('m.cpus >= :cs')
             ->setParameter('cs', $cpus)
+            ->andWhere($qb->expr()->isNull('m.process'))
             ->orderBy('m.memory', 'ASC')
             ->addOrderBy('m.cpus', 'ASC')
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult()
         ;
