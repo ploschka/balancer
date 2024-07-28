@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Process;
+use App\Repository\ProcessRepository;
 use App\Service\LoadBalancer;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,11 +26,14 @@ class ProcessController extends AbstractController
     }
 
     #[Route('/remove', name: 'remove_process')]
-    public function remove(Request $r, LoadBalancer $lb): JsonResponse
+    public function remove(Request $r, LoadBalancer $lb, EntityManagerInterface $em, ProcessRepository $prep): JsonResponse
     {
+        $j = json_decode($r->getContent(), true);
+        $p = $prep->find($j['id']);
+        $m = $p->getMachine();
+        $em->remove($p);
+        $lb->findProcessForMachine($m);
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/ProcessController.php',
         ]);
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Machine;
+use App\Repository\MachineRepository;
 use App\Service\LoadBalancer;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,11 +26,14 @@ class MachineController extends AbstractController
     }
 
     #[Route('/remove', name: 'remove_machine')]
-    public function remove(): JsonResponse
+    public function remove(Request $r, LoadBalancer $lb, EntityManagerInterface $em, MachineRepository $mrep): JsonResponse
     {
+        $j = json_decode($r->getContent(), true);
+        $m = $mrep->find($j['id']);
+        $p = $m->getProcess();
+        $em->remove($m);
+        $lb->findMachineForProcess($p);
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/MachineController.php',
         ]);
     }
 }
