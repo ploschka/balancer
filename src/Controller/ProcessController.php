@@ -15,12 +15,14 @@ use Symfony\Component\Routing\Attribute\Route;
 class ProcessController extends AbstractController
 {
     #[Route('/add', name: 'add_process')]
-    public function add(Request $r, LoadBalancer $lb): JsonResponse
+    public function add(Request $r, LoadBalancer $lb, EntityManagerInterface $em): JsonResponse
     {
         $p = new Process();
         $j = json_decode($r->getContent(), true);
         $p->setMemory($j['memory'])->setCpus($j['cpus']);
         $lb->findMachineForProcess($p);
+        $em->persist($p);
+        $em->flush();
         return $this->json([
         ]);
     }
@@ -33,6 +35,7 @@ class ProcessController extends AbstractController
         $m = $p->getMachine();
         $em->remove($p);
         $lb->findProcessForMachine($m);
+        $em->flush();
         return $this->json([
         ]);
     }

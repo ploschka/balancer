@@ -25,16 +25,12 @@ class LoadBalancer
     {
         $m = $this->mrep->findOneBySpecs($process->getMemory(), $process->getCpus());
         $process->setMachine($m);
-        $this->em->persist($process);
-        $this->em->flush();
     }
 
     public function findProcessForMachine(Machine $machine)
     {
         $p = $this->prep->findOneBySpecs($machine->getMemory(), $machine->getCpus());
         $machine->setProcess($p);
-        $this->em->persist($machine);
-        $this->em->flush();
     }
 }
 

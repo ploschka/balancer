@@ -15,12 +15,14 @@ use Symfony\Component\Routing\Attribute\Route;
 class MachineController extends AbstractController
 {
     #[Route('/add', name: 'add_machine')]
-    public function add(Request $r, LoadBalancer $lb): JsonResponse
+    public function add(Request $r, LoadBalancer $lb, EntityManagerInterface $em): JsonResponse
     {
         $m = new Machine();
         $j = json_decode($r->getContent(), true);
         $m->setMemory($j['memory'])->setCpus($j['cpus']);
         $lb->findProcessForMachine($m);
+        $em->persist($m);
+        $em->flush();
         return $this->json([
         ]);
     }
@@ -31,8 +33,12 @@ class MachineController extends AbstractController
         $j = json_decode($r->getContent(), true);
         $m = $mrep->find($j['id']);
         $p = $m->getProcess();
+        $em->beginTransaction();
         $em->remove($m);
+        $em->flush();
         $lb->findMachineForProcess($p);
+        $em->flush();
+        $em->commit();
         return $this->json([
         ]);
     }

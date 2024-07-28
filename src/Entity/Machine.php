@@ -19,7 +19,7 @@ class Machine
     #[ORM\Column]
     private ?int $cpus = null;
 
-    #[ORM\OneToOne(inversedBy: 'machine', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(inversedBy: 'machine', cascade: ['persist'])]
     private ?Process $process = null;
 
     public function getId(): ?int
