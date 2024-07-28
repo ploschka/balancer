@@ -19,6 +19,9 @@ class Machine
     #[ORM\Column]
     private ?int $cpus = null;
 
+    #[ORM\OneToOne(inversedBy: 'machine', cascade: ['persist', 'remove'])]
+    private ?Process $process = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -44,6 +47,18 @@ class Machine
     public function setCpus(int $cpus): static
     {
         $this->cpus = $cpus;
+
+        return $this;
+    }
+
+    public function getProcess(): ?Process
+    {
+        return $this->process;
+    }
+
+    public function setProcess(?Process $process): static
+    {
+        $this->process = $process;
 
         return $this;
     }
