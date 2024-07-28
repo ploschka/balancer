@@ -16,20 +16,22 @@ class ProcessRepository extends ServiceEntityRepository
         parent::__construct($registry, Process::class);
     }
 
-    //    /**
-    //     * @return Process[] Returns an array of Process objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('p.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @return Process Returns a Process object found by specifications
+     */
+    public function findOneBySpecs(int $memory, int $cpus): ?Process
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.memory <= :mem')
+            ->setParameter('mem', $memory)
+            ->andWhere('p.cpus <= :cs')
+            ->setParameter('cs', $cpus)
+            ->orderBy('p.memory', 'DESC')
+            ->addOrderBy('p.cpus', 'DESC')
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
 
     //    public function findOneBySomeField($value): ?Process
     //    {

@@ -16,20 +16,22 @@ class MachineRepository extends ServiceEntityRepository
         parent::__construct($registry, Machine::class);
     }
 
-    //    /**
-    //     * @return Machine[] Returns an array of Machine objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('m.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @return Machine Returns a Machine object found by specifications
+     */
+    public function findOneBySpecs(int $memory, int $cpus): ?Machine
+    {
+        return $this->createQueryBuilder('m')
+            ->andWhere('m.memory >= :mem')
+            ->setParameter('mem', $memory)
+            ->andWhere('m.cpus >= :cs')
+            ->setParameter('cs', $cpus)
+            ->orderBy('m.memory', 'ASC')
+            ->addOrderBy('m.cpus', 'ASC')
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
 
     //    public function findOneBySomeField($value): ?Machine
     //    {
