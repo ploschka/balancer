@@ -11,4 +11,5 @@ vendor
 .git
 .gitignore
 symfony.lock
+*.html
 
