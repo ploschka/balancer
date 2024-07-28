@@ -6,19 +6,16 @@ use App\Entity\Machine;
 use App\Entity\Process;
 use App\Repository\MachineRepository;
 use App\Repository\ProcessRepository;
-use Doctrine\ORM\EntityManagerInterface;
 
 class LoadBalancer
 {
-    private EntityManagerInterface $em;
     private MachineRepository $mrep;
     private ProcessRepository $prep;
 
-    public function __construct(MachineRepository $m, ProcessRepository $p, EntityManagerInterface $em)
+    public function __construct(MachineRepository $m, ProcessRepository $p)
     {
         $this->mrep = $m;
         $this->prep = $p;
-        $this->em = $em;
     }
 
     public function findMachineForProcess(Process $process)
