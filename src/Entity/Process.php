@@ -19,7 +19,7 @@ class Process
     #[ORM\Column]
     private ?int $cpus = null;
 
-    #[ORM\ManyToOne(inversedBy: 'processes')]
+    #[ORM\ManyToOne(inversedBy: 'processes', cascade: ['persist'])]
     private ?Machine $machine = null;
 
     public function getId(): ?int

@@ -24,7 +24,7 @@ class Machine
     /**
      * @var Collection<int, Process>
      */
-    #[ORM\OneToMany(targetEntity: Process::class, mappedBy: 'machine')]
+    #[ORM\OneToMany(targetEntity: Process::class, mappedBy: 'machine', cascade: ['persist'])]
     private Collection $processes;
 
     #[ORM\Column]
