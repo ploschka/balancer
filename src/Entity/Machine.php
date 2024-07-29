@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\MachineRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MachineRepository::class)]
@@ -19,8 +21,16 @@ class Machine
     #[ORM\Column]
     private ?int $cpus = null;
 
-    #[ORM\OneToOne(inversedBy: 'machine', cascade: ['persist'])]
-    private ?Process $process = null;
+    /**
+     * @var Collection<int, Process>
+     */
+    #[ORM\OneToMany(targetEntity: Process::class, mappedBy: 'machine')]
+    private Collection $processes;
+
+    public function __construct()
+    {
+        $this->processes = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -51,14 +61,32 @@ class Machine
         return $this;
     }
 
-    public function getProcess(): ?Process
+    /**
+     * @return Collection<int, Process>
+     */
+    public function getProcesses(): Collection
     {
-        return $this->process;
+        return $this->processes;
     }
 
-    public function setProcess(?Process $process): static
+    public function addProcess(Process $process): static
     {
-        $this->process = $process;
+        if (!$this->processes->contains($process)) {
+            $this->processes->add($process);
+            $process->setMachine($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProcess(Process $process): static
+    {
+        if ($this->processes->removeElement($process)) {
+            // set the owning side to null (unless already changed)
+            if ($process->getMachine() === $this) {
+                $process->setMachine(null);
+            }
+        }
 
         return $this;
     }

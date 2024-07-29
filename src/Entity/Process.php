@@ -19,7 +19,7 @@ class Process
     #[ORM\Column]
     private ?int $cpus = null;
 
-    #[ORM\OneToOne(mappedBy: 'process', cascade: ['persist'])]
+    #[ORM\ManyToOne(inversedBy: 'processes')]
     private ?Machine $machine = null;
 
     public function getId(): ?int
@@ -58,16 +58,6 @@ class Process
 
     public function setMachine(?Machine $machine): static
     {
-        // unset the owning side of the relation if necessary
-        if ($machine === null && $this->machine !== null) {
-            $this->machine->setProcess(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($machine !== null && $machine->getProcess() !== $this) {
-            $machine->setProcess($this);
-        }
-
         $this->machine = $machine;
 
         return $this;
