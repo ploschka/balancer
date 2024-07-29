@@ -27,6 +27,12 @@ class Machine
     #[ORM\OneToMany(targetEntity: Process::class, mappedBy: 'machine')]
     private Collection $processes;
 
+    #[ORM\Column]
+    private ?int $freeMemory = null;
+
+    #[ORM\Column]
+    private ?int $freeCpus = null;
+
     public function __construct()
     {
         $this->processes = new ArrayCollection();
@@ -87,6 +93,30 @@ class Machine
                 $process->setMachine(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getFreeMemory(): ?int
+    {
+        return $this->freeMemory;
+    }
+
+    public function setFreeMemory(int $free_memory): static
+    {
+        $this->freeMemory = $free_memory;
+
+        return $this;
+    }
+
+    public function getFreeCpus(): ?int
+    {
+        return $this->freeCpus;
+    }
+
+    public function setFreeCpus(int $free_cpus): static
+    {
+        $this->freeCpus = $free_cpus;
 
         return $this;
     }
