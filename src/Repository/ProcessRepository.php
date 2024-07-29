@@ -23,12 +23,11 @@ class ProcessRepository extends ServiceEntityRepository
     public function findOneBySpecs(int $memory, int $cpus): ?Process
     {
         $qb = $this->createQueryBuilder('p');
-        return $qb->andWhere('p.memory <= :mem')
+        return $qb->where('p.memory <= :mem')
             ->setParameter('mem', $memory)
             ->andWhere('p.cpus <= :cs')
             ->setParameter('cs', $cpus)
-            ->leftJoin('p.machine', 'm', Join::WITH, $qb->expr()->eq('m.process', 'p'))
-            ->andWhere('m.id is NULL')
+            ->andWhere($qb->expr()->isNull('p.machine'))
             ->orderBy('p.memory', 'DESC')
             ->addOrderBy('p.cpus', 'DESC')
             ->setMaxResults(1)

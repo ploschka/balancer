@@ -25,6 +25,7 @@ class Machine
      * @var Collection<int, Process>
      */
     #[ORM\OneToMany(targetEntity: Process::class, mappedBy: 'machine', cascade: ['persist'])]
+    #[ORM\OrderBy(['memory' => 'DESC', 'cpus' => 'DESC'])]
     private Collection $processes;
 
     #[ORM\Column]
@@ -75,8 +76,13 @@ class Machine
         return $this->processes;
     }
 
-    public function addProcess(Process $process): static
+    public function addProcess(?Process $process): static
     {
+        if (is_null($process))
+        {
+            return $this;
+        }
+
         if (!$this->processes->contains($process)) {
             $this->processes->add($process);
             $process->setMachine($this);
@@ -85,8 +91,13 @@ class Machine
         return $this;
     }
 
-    public function removeProcess(Process $process): static
+    public function removeProcess(?Process $process): static
     {
+        if (is_null($process))
+        {
+            return $this;
+        }
+
         if ($this->processes->removeElement($process)) {
             // set the owning side to null (unless already changed)
             if ($process->getMachine() === $this) {
@@ -109,6 +120,36 @@ class Machine
         return $this;
     }
 
+    private function addMemory(int $memory): static
+    {
+        if ($memory <= 0)
+        {
+            throw "Invalid memory";
+        }
+        if ($this->freeMemory + $memory > $this->memory)
+        {
+            throw "Too much memory added";
+        }
+
+        $this->freeMemory += $memory;
+        return $this;
+    }
+
+    private function reduceMemory(int $memory) : static
+    {
+        if ($memory <= 0)
+        {
+            throw "Invalid memory";
+        }
+        if ($this->freeMemory - $memory < 0)
+        {
+            throw "Too much memory reduced";
+        }
+
+        $this->freeMemory -= $memory;
+        return $this;
+    }
+
     public function getFreeCpus(): ?int
     {
         return $this->freeCpus;
@@ -118,6 +159,60 @@ class Machine
     {
         $this->freeCpus = $free_cpus;
 
+        return $this;
+    }
+
+    private function addCpus(int $cpus): static
+    {
+        if ($cpus <= 0)
+        {
+            throw "Invalid cpus";
+        }
+        if ($this->freeCpus + $cpus > $this->cpus)
+        {
+            throw "Too much cpus added";
+        }
+
+        $this->freeCpus += $cpus;
+        return $this;
+    }
+
+    private function reduceCpus(int $cpus) : static
+    {
+        if ($cpus <= 0)
+        {
+            throw "Invalid cpus";
+        }
+        if ($this->freeCpus - $cpus < 0)
+        {
+            throw "Too much cpus reduced";
+        }
+
+        $this->freeCpus -= $cpus;
+        return $this;
+    }
+
+    public function free(?Process $p) : static
+    {
+        if (is_null($p))
+        {
+            return $this;
+        }
+
+        $this->addMemory($p->getMemory())
+            ->addCpus($p->getCpus());
+        return $this;
+    }
+
+    public function claim(?Process $p) : static
+    {
+        if (is_null($p))
+        {
+            return $this;
+        }
+
+        $this->reduceMemory($p->getMemory())
+            ->reduceCpus($p->getCpus());
         return $this;
     }
 }

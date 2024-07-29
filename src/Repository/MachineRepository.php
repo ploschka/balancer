@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Machine;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -19,19 +20,75 @@ class MachineRepository extends ServiceEntityRepository
     /**
      * @return Machine Returns a Machine object found by specifications
      */
-    public function findOneBySpecs(int $memory, int $cpus): ?Machine
+    public function findFreeOneBySpecs(int $memory, int $cpus): ?Machine
     {
         $qb = $this->createQueryBuilder('m');
-        return $qb->andWhere('m.memory >= :mem')
+        return $qb->where('m.freeMemory >= :mem')
             ->setParameter('mem', $memory)
-            ->andWhere('m.cpus >= :cs')
+            ->andWhere('m.freeCpus >= :cs')
             ->setParameter('cs', $cpus)
-            ->andWhere($qb->expr()->isNull('m.process'))
-            ->orderBy('m.memory', 'ASC')
-            ->addOrderBy('m.cpus', 'ASC')
+            ->andWhere('m.memory = m.freeMemory')
+            ->andWhere('m.cpus = m.freeCpus')
+            ->orderBy('m.freeMemory', 'ASC')
+            ->addOrderBy('m.freeCpus', 'ASC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult()
+        ;
+    }
+
+    public function findOccupiedOneBySpecs(int $memory, int $cpus): ?Machine
+    {
+        $qb = $this->createQueryBuilder('m');
+        return $qb->where('m.freeMemory >= :mem')
+            ->setParameter('mem', $memory)
+            ->andWhere('m.freeCpus >= :cs')
+            ->setParameter('cs', $cpus)
+            ->andWhere('m.memory != m.freeMemory')
+            ->andWhere('m.cpus != m.freeCpus')
+            ->orderBy('m.freeMemory', 'ASC')
+            ->addOrderBy('m.freeCpus', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+
+    public function findBySpecsFreeExcept(int $memory, int $cpus, int $quantity, Machine $machine): array
+    {
+        $qb = $this->createQueryBuilder('m');
+        return $qb->where('m.freeMemory >= :mem')
+            ->setParameter('mem', $memory)
+            ->andWhere('m.freeCpus >= :cs')
+            ->setParameter('cs', $cpus)
+            ->andWhere('m.memory = m.freeMemory')
+            ->andWhere('m.cpus = m.freeCpus')
+            ->andWhere('m.id != :eid')
+            ->setParameter('eid', $machine->getId())
+            ->orderBy('m.freeMemory', 'ASC')
+            ->addOrderBy('m.freeCpus', 'ASC')
+            ->setMaxResults($quantity)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    public function findBySpecsOccupiedExcept(int $memory, int $cpus, int $quantity, Machine $machine): array
+    {
+        $qb = $this->createQueryBuilder('m');
+        return $qb->where('m.freeMemory >= :mem')
+            ->setParameter('mem', $memory)
+            ->andWhere('m.freeCpus >= :cs')
+            ->setParameter('cs', $cpus)
+            ->andWhere('m.memory != m.freeMemory')
+            ->andWhere('m.cpus != m.freeCpus')
+            ->andWhere('m.id != :eid')
+            ->setParameter('eid', $machine->getId())
+            ->orderBy('m.freeMemory', 'ASC')
+            ->addOrderBy('m.freeCpus', 'ASC')
+            ->setMaxResults($quantity)
+            ->getQuery()
+            ->getResult()
         ;
     }
 

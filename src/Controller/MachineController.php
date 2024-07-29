@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Machine;
 use App\Repository\MachineRepository;
 use App\Service\LoadBalancer;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,17 +20,20 @@ class MachineController extends AbstractController
     {
         $m = new Machine();
         $j = json_decode($r->getContent(), true);
-        if (!ctype_digit($j['memory'] or !ctype_digit($j['cpus'])))
+        if (!ctype_digit($j['memory']) or !ctype_digit($j['cpus']))
         {
-            return $this->json(null, 400);
+            if (!is_int($j['memory']) or !is_int($j['cpus']))
+            {
+                return $this->json(null, 400);
+            }
         }
 
-        $m->setMemory($j['memory'])->setCpus($j['cpus']);
-        $lb->findProcessForMachine($m);
+        $m->setMemory($j['memory'])->setCpus($j['cpus'])->setFreeMemory($j['memory'])->setFreeCpus($j['cpus']);
+        $p = $lb->findProcessForMachine($m);
         $em->persist($m);
         $em->flush();
 
-        $pid = $m->getProcess() === null ? null : $m->getProcess()->getId();
+        $pid = $p === null ? null : $p->getId();
         return $this->json([
             'process_id' => $pid,
             'machine_id' => $m->getId(),
@@ -39,33 +43,21 @@ class MachineController extends AbstractController
     #[Route('/remove', name: 'remove_machine')]
     public function remove(Request $r, LoadBalancer $lb, EntityManagerInterface $em, MachineRepository $mrep): JsonResponse
     {
-        $mid = null;
-        $pid = null;
-
+        $updates = [];
         $j = json_decode($r->getContent(), true);
-        if (!ctype_digit($j['id']))
+        if (!ctype_digit($j['id']) and !is_int($j['id']))
         {
             return $this->json(null, 400);
         }
 
         $m = $mrep->find($j['id']);
-        $p = $m->getProcess();
-        $em->beginTransaction();
-        $em->remove($m);
-        $em->flush();
-        if (!is_null($p))
+        if (!is_null($m))
         {
-            $lb->findMachineForProcess($p);
-            $mid = $p->getMachine() === null ? null : $p->getMachine()->getId();
-            $pid = $p->getId();
+            $ps = $lb->freeMachine($m);
+            $em->remove($m);
+            $em->flush();
         }
 
-        $em->flush();
-        $em->commit();
-
-        return $this->json([
-            'process_id' => $pid,
-            'machine_id' => $mid,
-        ]);
+        return $this->json($updates);
     }
 }

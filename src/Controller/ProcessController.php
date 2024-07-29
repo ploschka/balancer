@@ -19,17 +19,20 @@ class ProcessController extends AbstractController
     {
         $p = new Process();
         $j = json_decode($r->getContent(), true);
-        if (!ctype_digit($j['memory'] or !ctype_digit($j['cpus'])))
+        if (!ctype_digit($j['memory']) or !ctype_digit($j['cpus']))
         {
-            return $this->json(null, 400);
+            if (!is_int($j['memory']) or !is_int($j['cpus']))
+            {
+                return $this->json(null, 400);
+            }
         }
 
         $p->setMemory($j['memory'])->setCpus($j['cpus']);
-        $lb->findMachineForProcess($p);
+        $new_m = $lb->findMachineForProcess($p);
         $em->persist($p);
         $em->flush();
 
-        $mid = $p->getMachine() === null ? null : $p->getMachine()->getId();
+        $mid = $new_m === null ? null : $new_m->getId();
         return $this->json([
             'process_id' => $p->getId(),
             'machine_id' => $mid,
@@ -43,23 +46,18 @@ class ProcessController extends AbstractController
         $mid = null;
 
         $j = json_decode($r->getContent(), true);
-        if (!ctype_digit($j['id']))
+        if (!ctype_digit($j['id']) and !is_int($j['id']))
         {
             return $this->json(null, 400);
         }
 
         $p = $prep->find($j['id']);
-        $m = $p->getMachine();
-        $em->remove($p);
-        if (!is_null($m))
+        if (!is_null($p))
         {
-            $lb->findProcessForMachine($m);
-            $pid = $m->getProcess() === null ? null : $m->getProcess()->getId();
-            $mid = $m->getId();
+            $lb->freeProcess($p);
+            $em->remove($p);
+            $em->flush();
         }
-
-        $em->flush();
-
 
         return $this->json([
             'process_id' => $pid,
