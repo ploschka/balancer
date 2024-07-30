@@ -1,6 +1,6 @@
 build
 docker-compose*
-.Dockerignore
+.dockerignore
 .env.local
 .env.local.php
 .env.*.local
