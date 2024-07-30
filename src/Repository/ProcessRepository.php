@@ -4,7 +4,6 @@ namespace App\Repository;
 
 use App\Entity\Process;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -18,9 +17,9 @@ class ProcessRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Process Returns a Process object found by specifications
+     * @return Process[] Returns an array of Process objects found by specifications
      */
-    public function findOneBySpecs(int $memory, int $cpus): ?Process
+    public function findBySpecs(int $memory, int $cpus): array|null
     {
         $qb = $this->createQueryBuilder('p');
         return $qb->where('p.memory <= :mem')
@@ -30,9 +29,8 @@ class ProcessRepository extends ServiceEntityRepository
             ->andWhere($qb->expr()->isNull('p.machine'))
             ->orderBy('p.memory', 'DESC')
             ->addOrderBy('p.cpus', 'DESC')
-            ->setMaxResults(1)
             ->getQuery()
-            ->getOneOrNullResult()
+            ->getResult()
         ;
     }
 

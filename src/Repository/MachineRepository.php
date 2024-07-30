@@ -18,7 +18,7 @@ class MachineRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Machine Returns a Machine object found by specifications
+     * @return Machine Returns a free Machine object found by specifications
      */
     public function findFreeOneBySpecs(int $memory, int $cpus): ?Machine
     {
@@ -37,6 +37,9 @@ class MachineRepository extends ServiceEntityRepository
         ;
     }
 
+    /**
+    * @return Machine Returns an occupied Machine object found by specifications
+    */
     public function findOccupiedOneBySpecs(int $memory, int $cpus): ?Machine
     {
         $qb = $this->createQueryBuilder('m');
@@ -54,7 +57,10 @@ class MachineRepository extends ServiceEntityRepository
         ;
     }
 
-    public function findBySpecsFreeExcept(int $memory, int $cpus, int $quantity, Machine $machine): array
+    /**
+     * @return Machine[] Returns an array of length <= $quantity of free Machine objects found by specification except for $machine
+     */
+    public function findBySpecsFreeExcept(int $memory, int $cpus, int $quantity, Machine $machine) : array|null
     {
         $qb = $this->createQueryBuilder('m');
         return $qb->where('m.freeMemory >= :mem')
@@ -73,7 +79,10 @@ class MachineRepository extends ServiceEntityRepository
         ;
     }
 
-    public function findBySpecsOccupiedExcept(int $memory, int $cpus, int $quantity, Machine $machine): array
+    /**
+     * @return Machine[] Returns an array of length <= $quantity of occupied Machine objects found by specification except for $machine
+     */
+    public function findBySpecsOccupiedExcept(int $memory, int $cpus, int $quantity, Machine $machine) : array|null
     {
         $qb = $this->createQueryBuilder('m');
         return $qb->where('m.freeMemory >= :mem')

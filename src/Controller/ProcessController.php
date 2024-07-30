@@ -42,9 +42,6 @@ class ProcessController extends AbstractController
     #[Route('/remove', name: 'remove_process')]
     public function remove(Request $r, LoadBalancer $lb, EntityManagerInterface $em, ProcessRepository $prep): JsonResponse
     {
-        $pid = null;
-        $mid = null;
-
         $j = json_decode($r->getContent(), true);
         if (!ctype_digit($j['id']) and !is_int($j['id']))
         {
@@ -52,17 +49,26 @@ class ProcessController extends AbstractController
         }
 
         $p = $prep->find($j['id']);
+        $updates = [];
         if (!is_null($p))
         {
-            $lb->freeProcess($p);
+            $mid = $p->getMachine() === null ? null : $p->getMachine()->getId();
+            $ps = $lb->freeProcess($p);
+
             $em->remove($p);
             $em->flush();
+
+            $ps = $ps ?? [];
+            foreach ($ps as $pp)
+            {
+                $updates[] = [
+                    'process_id' => $pp->getId(),
+                    'machine_id' => $mid,
+                ];
+            }
         }
 
-        return $this->json([
-            'process_id' => $pid,
-            'machine_id' => $mid,
-        ]);
+        return $this->json($updates);
     }
 }
 

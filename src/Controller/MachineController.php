@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Machine;
 use App\Repository\MachineRepository;
 use App\Service\LoadBalancer;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,21 +28,26 @@ class MachineController extends AbstractController
         }
 
         $m->setMemory($j['memory'])->setCpus($j['cpus'])->setFreeMemory($j['memory'])->setFreeCpus($j['cpus']);
-        $p = $lb->findProcessForMachine($m);
+        $ps = $lb->findProcessesForMachine($m);
         $em->persist($m);
         $em->flush();
 
-        $pid = $p === null ? null : $p->getId();
-        return $this->json([
-            'process_id' => $pid,
-            'machine_id' => $m->getId(),
-        ]);
+        $updates = [];
+        $ps = $ps ?? [];
+        foreach ($ps as $p)
+        {
+            $mid = $m->getId();
+            $updates[] = [
+                'process_id' => $p->getId(),
+                'machine_id' => $mid,
+            ];
+        }
+        return $this->json($updates);
     }
 
     #[Route('/remove', name: 'remove_machine')]
     public function remove(Request $r, LoadBalancer $lb, EntityManagerInterface $em, MachineRepository $mrep): JsonResponse
     {
-        $updates = [];
         $j = json_decode($r->getContent(), true);
         if (!ctype_digit($j['id']) and !is_int($j['id']))
         {
@@ -51,9 +55,19 @@ class MachineController extends AbstractController
         }
 
         $m = $mrep->find($j['id']);
+        $updates = [];
         if (!is_null($m))
         {
             $ps = $lb->freeMachine($m);
+            $ps = $ps ?? [];
+            foreach ($ps as $p)
+            {
+                $mid = $p->getMachine() === null ? null : $p->getMachine()->getId();
+                $updates[] = [
+                    'process_id' => $p->getId(),
+                    'machine_id' => $mid,
+                ];
+            }
             $em->remove($m);
             $em->flush();
         }

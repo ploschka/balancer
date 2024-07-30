@@ -6,7 +6,6 @@ use App\Entity\Machine;
 use App\Entity\Process;
 use App\Repository\MachineRepository;
 use App\Repository\ProcessRepository;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
 class LoadBalancer
@@ -20,6 +19,9 @@ class LoadBalancer
         $this->prep = $p;
     }
 
+    /**
+     * @return Machine Returns Machine object that claimed process
+     */
     public function findMachineForProcess(Process $process): ?Machine
     {
         $m = $this->mrep->findFreeOneBySpecs($process->getMemory(), $process->getCpus());
@@ -36,18 +38,30 @@ class LoadBalancer
         return $m;
     }
 
-    public function findProcessForMachine(Machine $machine): ?Process
+    /**
+     * @return Process[] Returns an array of claimed Process objects
+     */
+    public function findProcessesForMachine(Machine $machine): array|null
     {
-        $p = $this->prep->findOneBySpecs($machine->getMemory(), $machine->getCpus());
-        if (!is_null($p))
+        $ps = $this->prep->findBySpecs($machine->getMemory(), $machine->getCpus());
+        $i = 0;
+        $pc = count($ps);
+        if (!is_null($ps))
         {
-            $machine->addProcess($p);
-            $machine->claim($p);
+            while ($i < $pc and $machine->getFreeMemory() > 0 and $machine->getFreeCpus() > 0)
+            {
+                $machine->addProcess($ps[$i]);
+                $machine->claim($ps[$i]);
+                $i++;
+            }
         }
-        return $p;
+        return $i === 0 ? null : array_slice($ps, 0, $i);
     }
 
-    public function freeProcess(Process $process) : ?Machine
+    /**
+     * @return Process[] Returns an array of new processes for process machine
+     */
+    public function freeProcess(Process $process) : array|null
     {
         $m = $process->getMachine();
         if (is_null($m))
@@ -56,13 +70,16 @@ class LoadBalancer
         }
         $m->removeProcess($process);
         $m->free($process);
-        $new_p = $this->findProcessForMachine($m);
+        $new_p = $this->findProcessesForMachine($m);
         $process->setMachine(null);
 
-        return $m;
+        return $new_p;
     }
 
-    public function freeMachine(Machine $machine) : Collection
+    /**
+     * @return Process[] Returns an array of processes that were claimed by deleted machine
+     */
+    public function freeMachine(Machine $machine) : array|null
     {
         $ps = $machine->getProcesses();
         $len = $ps->count();
@@ -81,15 +98,24 @@ class LoadBalancer
             $om = $this->mrep->findBySpecsOccupiedExcept($ps->first()->getMemory(), $ps->first()->getCpus(), $len - $flen, $machine);
         }
 
-        $fend = false;
-        $oend = false;
+        $end = false;
+
+        $combined = [];
+        if (!is_null($fm))
+        {
+            array_merge($combined, $fm);
+        }
+        if (!is_null($om))
+        {
+            array_merge($combined, $om);
+        }
 
         foreach ($ps as $p)
         {
             $claimed = false;
-            if (!$fend)
+            if (!$end)
             {
-                foreach($fm as $m)
+                foreach($combined as $m)
                 {
                     if ($m->getFreeMemory() >= $p->getMemory() and $m->getFreeCpus() >= $p->getCpus())
                     {
@@ -100,47 +126,14 @@ class LoadBalancer
                     }
                 }
             }
-            $fend = !$claimed;
-            if (!$oend and !$claimed)
-            {
-                foreach($om as $m)
-                {
-                    if ($m->getFreeMemory() >= $p->getMemory() and $m->getFreeCpus() >= $p->getCpus())
-                    {
-                        $p->setMachine($m);
-                        $m->claim($p);
-                        $claimed = true;
-                        break;
-                    }
-                }
-            }
-            $oend = !$claimed;
+            $end = !$claimed;
             if (!$claimed)
             {
                 $p->setMachine(null);
             }
         }
 
-        # foreach($fm as $m)
-        # {
-        #     $p = $ps->get($pcounter);
-        #     $p->setMachine($m);
-        #     $m->claim($p);
-        #     $pcounter++;
-        # }
-        # foreach($om as $m)
-        # {
-        #     $p = $ps->get($pcounter);
-        #     $p->setMachine($m);
-        #     $m->claim($p);
-        #     $pcounter++;
-        # }
-        # for($i = $pcounter; $i < $len; $i++)
-        # {
-        #     $ps->get($pcounter)->setMachine(null);
-        # }
-
-        return $ps;
+        return $ps->toArray();
     }
 }
 
