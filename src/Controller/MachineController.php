@@ -33,14 +33,20 @@ class MachineController extends AbstractController
         $em->flush();
 
         $updates = [];
-        $ps = $ps ?? [];
-        foreach ($ps as $p)
+        if (is_null($ps))
         {
-            $mid = $m->getId();
-            $updates[] = [
-                'process_id' => $p->getId(),
-                'machine_id' => $mid,
-            ];
+            $updates = ['machine_id' => $m->getId()];
+        }
+        else
+        {
+            foreach ($ps as $p)
+            {
+                $mid = $m->getId();
+                $updates[] = [
+                    'process_id' => $p->getId(),
+                    'machine_id' => $mid,
+                ];
+            }
         }
         return $this->json($updates);
     }

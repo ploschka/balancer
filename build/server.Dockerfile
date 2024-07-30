@@ -1,4 +1,4 @@
-FROM ploshka/symfony-nginx:latest
+FROM ploshka/symfony-nginx:1.0
 WORKDIR /app
-COPY ./ /app
-# Try to not copy the files to see what going to happen then
+COPY ./public /app/public
+
