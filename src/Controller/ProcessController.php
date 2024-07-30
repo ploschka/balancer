@@ -58,13 +58,19 @@ class ProcessController extends AbstractController
             $em->remove($p);
             $em->flush();
 
-            $ps = $ps ?? [];
-            foreach ($ps as $pp)
+            if (is_null($ps))
             {
-                $updates[] = [
-                    'process_id' => $pp->getId(),
-                    'machine_id' => $mid,
-                ];
+                $updates = ['machine_id' => $mid];
+            }
+            else
+            {
+                foreach ($ps as $pp)
+                {
+                    $updates[] = [
+                        'process_id' => $pp->getId(),
+                        'machine_id' => $mid,
+                    ];
+                }
             }
         }
 

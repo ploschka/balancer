@@ -103,11 +103,11 @@ class LoadBalancer
         $combined = [];
         if (!is_null($fm))
         {
-            array_merge($combined, $fm);
+            $combined = array_merge($combined, $fm);
         }
         if (!is_null($om))
         {
-            array_merge($combined, $om);
+            $combined = array_merge($combined, $om);
         }
 
         foreach ($ps as $p)
