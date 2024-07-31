@@ -6,6 +6,7 @@ use App\Repository\MachineRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 
 #[ORM\Entity(repositoryClass: MachineRepository::class)]
 class Machine
@@ -124,11 +125,11 @@ class Machine
     {
         if ($memory <= 0)
         {
-            throw "Invalid memory";
+            throw new Exception("Invalid memory");
         }
         if ($this->freeMemory + $memory > $this->memory)
         {
-            throw "Too much memory added";
+            throw new Exception("Too much memory added");
         }
 
         $this->freeMemory += $memory;
@@ -139,11 +140,11 @@ class Machine
     {
         if ($memory <= 0)
         {
-            throw "Invalid memory";
+            throw new Exception("Invalid memory");
         }
         if ($this->freeMemory - $memory < 0)
         {
-            throw "Too much memory reduced";
+            throw new Exception("Too much memory reduced");
         }
 
         $this->freeMemory -= $memory;
@@ -166,11 +167,11 @@ class Machine
     {
         if ($cpus <= 0)
         {
-            throw "Invalid cpus";
+            throw new Exception("Invalid cpus");
         }
         if ($this->freeCpus + $cpus > $this->cpus)
         {
-            throw "Too much cpus added";
+            throw new Exception("Too much cpus added");
         }
 
         $this->freeCpus += $cpus;
@@ -181,11 +182,11 @@ class Machine
     {
         if ($cpus <= 0)
         {
-            throw "Invalid cpus";
+            throw new Exception("Invalid cpus");
         }
         if ($this->freeCpus - $cpus < 0)
         {
-            throw "Too much cpus reduced";
+            throw new Exception("Too much cpus reduced");
         }
 
         $this->freeCpus -= $cpus;
