@@ -14,8 +14,18 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/process')]
 class ProcessController extends AbstractController
 {
+    private LoadBalancer $lb;
+    private EntityManagerInterface $em;
+    private ProcessRepository $prep;
+
+    public function __construct(LoadBalancer $lb, EntityManagerInterface $em, ProcessRepository $prep)
+    {
+        $this->lb = $lb;
+        $this->em = $em;
+        $this->prep = $prep;
+    }
     #[Route('/add', name: 'add_process')]
-    public function add(Request $r, LoadBalancer $lb, EntityManagerInterface $em): JsonResponse
+    public function add(Request $r): JsonResponse
     {
         $p = new Process();
         $j = json_decode($r->getContent(), true);
@@ -28,9 +38,9 @@ class ProcessController extends AbstractController
         }
 
         $p->setMemory($j['memory'])->setCpus($j['cpus']);
-        $new_m = $lb->findMachineForProcess($p);
-        $em->persist($p);
-        $em->flush();
+        $new_m = $this->lb->findMachineForProcess($p);
+        $this->em->persist($p);
+        $this->em->flush();
 
         $mid = $new_m === null ? null : $new_m->getId();
         return $this->json([
@@ -40,7 +50,7 @@ class ProcessController extends AbstractController
     }
 
     #[Route('/remove', name: 'remove_process')]
-    public function remove(Request $r, LoadBalancer $lb, EntityManagerInterface $em, ProcessRepository $prep): JsonResponse
+    public function remove(Request $r): JsonResponse
     {
         $j = json_decode($r->getContent(), true);
         if (!ctype_digit($j['id']) and !is_int($j['id']))
@@ -48,15 +58,15 @@ class ProcessController extends AbstractController
             return $this->json(null, 400);
         }
 
-        $p = $prep->find($j['id']);
+        $p = $this->prep->find($j['id']);
         $updates = [];
         if (!is_null($p))
         {
             $mid = $p->getMachine() === null ? null : $p->getMachine()->getId();
-            $ps = $lb->freeProcess($p);
+            $ps = $this->lb->freeProcess($p);
 
-            $em->remove($p);
-            $em->flush();
+            $this->em->remove($p);
+            $this->em->flush();
 
             if (is_null($ps))
             {

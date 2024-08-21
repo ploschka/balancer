@@ -14,8 +14,19 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/machine')]
 class MachineController extends AbstractController
 {
+    private LoadBalancer $lb;
+    private EntityManagerInterface $em;
+    private MachineRepository $mrep;
+
+    public function __construct(LoadBalancer $lb, EntityManagerInterface $em, MachineRepository $mrep)
+    {
+        $this->lb = $lb;
+        $this->em = $em;
+        $this->mrep = $mrep;
+    }
+
     #[Route('/add', name: 'add_machine')]
-    public function add(Request $r, LoadBalancer $lb, EntityManagerInterface $em): JsonResponse
+    public function add(Request $r): JsonResponse
     {
         $m = new Machine();
         $j = json_decode($r->getContent(), true);
@@ -28,9 +39,9 @@ class MachineController extends AbstractController
         }
 
         $m->setMemory($j['memory'])->setCpus($j['cpus'])->setFreeMemory($j['memory'])->setFreeCpus($j['cpus']);
-        $ps = $lb->findProcessesForMachine($m);
-        $em->persist($m);
-        $em->flush();
+        $ps = $this->lb->findProcessesForMachine($m);
+        $this->em->persist($m);
+        $this->em->flush();
 
         $updates = [];
         if (is_null($ps))
@@ -52,7 +63,7 @@ class MachineController extends AbstractController
     }
 
     #[Route('/remove', name: 'remove_machine')]
-    public function remove(Request $r, LoadBalancer $lb, EntityManagerInterface $em, MachineRepository $mrep): JsonResponse
+    public function remove(Request $r): JsonResponse
     {
         $j = json_decode($r->getContent(), true);
         if (!ctype_digit($j['id']) and !is_int($j['id']))
@@ -60,11 +71,11 @@ class MachineController extends AbstractController
             return $this->json(null, 400);
         }
 
-        $m = $mrep->find($j['id']);
+        $m = $this->mrep->find($j['id']);
         $updates = [];
         if (!is_null($m))
         {
-            $ps = $lb->freeMachine($m);
+            $ps = $this->lb->freeMachine($m);
             $ps = $ps ?? [];
             foreach ($ps as $p)
             {
@@ -74,8 +85,8 @@ class MachineController extends AbstractController
                     'machine_id' => $mid,
                 ];
             }
-            $em->remove($m);
-            $em->flush();
+            $this->em->remove($m);
+            $this->em->flush();
         }
 
         return $this->json($updates);
