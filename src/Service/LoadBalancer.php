@@ -23,11 +23,7 @@ class LoadBalancer
      */
     public function findMachineForProcess(Process $process): ?Machine
     {
-        $m = $this->mrep->findFreeOneBySpecs($process->getMemory(), $process->getCpus());
-        if (is_null($m))
-        {
-            $m = $this->mrep->findOccupiedOneBySpecs($process->getMemory(), $process->getCpus());
-        }
+        $m = $this->mrep->findOneBySpecs($process->getMemory(), $process->getCpus());
         $process->setMachine($m);
         if (!is_null($m))
         {
@@ -87,34 +83,18 @@ class LoadBalancer
             return $ps;
         }
 
-        $fm = $this->mrep->findBySpecsFreeExcept($ps->first()->getMemory(), $ps->first()->getCpus(), $len, $machine);
-        $om = null;
-
-        $flen = count($fm);
-
-        if ($flen < $len)
-        {
-            $om = $this->mrep->findBySpecsOccupiedExcept($ps->first()->getMemory(), $ps->first()->getCpus(), $len - $flen, $machine);
-        }
+        $fm = $this->mrep->findBySpecsExcept($ps->first()->getMemory(), $ps->first()->getCpus(), $len, $machine);
 
         $end = false;
 
-        $combined = [];
-        if (!is_null($fm))
-        {
-            $combined = array_merge($combined, $fm);
-        }
-        if (!is_null($om))
-        {
-            $combined = array_merge($combined, $om);
-        }
+        $fm = $fm ?? [];
 
         foreach ($ps as $p)
         {
             $claimed = false;
             if (!$end)
             {
-                foreach($combined as $m)
+                foreach($fm as $m)
                 {
                     if ($m->getFreeMemory() >= $p->getMemory() and $m->getFreeCpus() >= $p->getCpus())
                     {
