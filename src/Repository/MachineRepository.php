@@ -4,7 +4,6 @@ namespace App\Repository;
 
 use App\Entity\Machine;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -18,9 +17,12 @@ class MachineRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Machine|null Returns a Machine object found by id or null
+     * Find machine by id
+     * @param int $id
+     * @return Machine|null suitable machine
+     * or null if none found
      */
-    public function findOneById(int $id): ?Machine
+    public function findById(int $id): ?Machine
     {
         $qb = $this->createQueryBuilder('m');
         return $qb->where('m.id = :mid')
@@ -31,7 +33,11 @@ class MachineRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Machine Returns a Machine object found by specifications
+     * Find one machine by specifications
+     * @param int $memory
+     * @param int $cpus
+     * @return Machine|null suitable machine
+     * or null if none found
      */
     public function findOneBySpecs(int $memory, int $cpus): ?Machine
     {
@@ -49,9 +55,14 @@ class MachineRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Machine[] Returns an array of length <= $quantity of Machine objects found by specification except for $machine
+     * Find machines by specifications except for $machine
+     * @param int $memory
+     * @param int $cpus
+     * @param int $quantity maximum length of the returned array
+     * @param Machine $machine a machine to be excluded
+     * @return Machine[] an array of suitable machines with length <= $quantity
      */
-    public function findBySpecsExcept(int $memory, int $cpus, int $quantity, Machine $machine) : array|null
+    public function findBySpecsExcept(int $memory, int $cpus, int $quantity, Machine $machine) : array
     {
         $qb = $this->createQueryBuilder('m');
         return $qb->where('m.freeMemory >= :mem')

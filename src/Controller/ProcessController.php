@@ -80,7 +80,7 @@ class ProcessController extends AbstractController
             return $this->json(null, 400);
         }
 
-        $p = $this->prep->findOneById($j['id']);
+        $p = $this->prep->findById($j['id']);
         $updates = [];
         if (!is_null($p))
         {

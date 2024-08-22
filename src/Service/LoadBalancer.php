@@ -19,7 +19,10 @@ class LoadBalancer
     }
 
     /**
-     * @return Machine Returns Machine object that claimed process
+     * Find machine that could claim $process
+     * @param Process $process
+     * @return Machine|null machine that claimed process
+     * or null if no suitable machine found
      */
     public function findMachineForProcess(Process $process): ?Machine
     {
@@ -34,7 +37,10 @@ class LoadBalancer
     }
 
     /**
-     * @return Process[] Returns an array of claimed Process objects
+     * Find processes that could be claimed by $machine
+     * @param Machine $machine
+     * @return Process[]|null an array of claimed processes
+     * or null if no suitable processes found
      */
     public function findProcessesForMachine(Machine $machine): array|null
     {
@@ -54,33 +60,38 @@ class LoadBalancer
     }
 
     /**
-     * @return Process[] Returns an array of new processes for process machine
+     * Free process from its machine and find new processes for that machine
+     * @param Process $process process to free
+     * @return Process[]|null an array of new processes for machine that claimed $process
+     * or null if process was already free
      */
     public function freeProcess(Process $process) : array|null
     {
         $m = $process->getMachine();
         if (is_null($m))
         {
-            return $m;
+            return null;
         }
         $m->removeProcess($process);
         $m->free($process);
         $new_p = $this->findProcessesForMachine($m);
         $process->setMachine(null);
 
-        return $new_p;
+        return $new_p ?? [];
     }
 
     /**
-     * @return Process[] Returns an array of processes that were claimed by deleted machine
+     * Free machine from its processes and find new machines for that processes
+     * @param Machine $machine machine to free
+     * @return Process[] an array of processes that were claimed by deleted machine
      */
-    public function freeMachine(Machine $machine) : array|null
+    public function freeMachine(Machine $machine) : array
     {
         $ps = $machine->getProcesses();
         $len = $ps->count();
         if ($len === 0)
         {
-            return $ps;
+            return [];
         }
 
         $fm = $this->mrep->findBySpecsExcept($ps->first()->getMemory(), $ps->first()->getCpus(), $len, $machine);

@@ -17,9 +17,12 @@ class ProcessRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Process|null Returns a Process object found by id or null
+     * Find process by id
+     * @param int $id
+     * @return Process|null suitable process
+     * or null if none found
      */
-    public function findOneById(int $id): ?Process
+    public function findById(int $id): ?Process
     {
         $qb = $this->createQueryBuilder('p');
         return $qb->where('p.id = :pid')
@@ -30,9 +33,12 @@ class ProcessRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Process[] Returns an array of Process objects found by specifications
+     * Find processes by specifications
+     * @param int $memory
+     * @param int $cpus
+     * @return Process[] an array of suitable processes
      */
-    public function findBySpecs(int $memory, int $cpus): array|null
+    public function findBySpecs(int $memory, int $cpus): array
     {
         $qb = $this->createQueryBuilder('p');
         return $qb->where('p.memory <= :mem')

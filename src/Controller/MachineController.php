@@ -93,7 +93,7 @@ class MachineController extends AbstractController
             return $this->json(null, 400);
         }
 
-        $m = $this->mrep->findOneById($j['id']);
+        $m = $this->mrep->findById($j['id']);
         $updates = [];
         if (!is_null($m))
         {
