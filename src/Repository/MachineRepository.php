@@ -12,12 +12,22 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class MachineRepository extends ServiceEntityRepository
 {
-    private EntityManagerInterface $em;
-
-    public function __construct(ManagerRegistry $registry, EntityManagerInterface $em)
+    public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Machine::class);
-        $this->em = $em;
+    }
+
+    /**
+     * @return Machine|null Returns a Machine object found by id or null
+     */
+    public function findOneById(int $id): ?Machine
+    {
+        $qb = $this->createQueryBuilder('m');
+        return $qb->where('m.id = :mid')
+            ->setParameter('mid', $id)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
     }
 
     /**

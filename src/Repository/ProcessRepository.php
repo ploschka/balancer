@@ -17,6 +17,19 @@ class ProcessRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Process|null Returns a Process object found by id or null
+     */
+    public function findOneById(int $id): ?Process
+    {
+        $qb = $this->createQueryBuilder('p');
+        return $qb->where('p.id = :pid')
+            ->setParameter('pid', $id)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+
+    /**
      * @return Process[] Returns an array of Process objects found by specifications
      */
     public function findBySpecs(int $memory, int $cpus): array|null
