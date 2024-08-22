@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\ProcessRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProcessRepository::class)]
 class Process
@@ -14,9 +15,13 @@ class Process
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Assert\Type('integer')]
+    #[Assert\Positive]
     private ?int $memory = null;
 
     #[ORM\Column]
+    #[Assert\Type('integer')]
+    #[Assert\Positive]
     private ?int $cpus = null;
 
     #[ORM\ManyToOne(inversedBy: 'processes', cascade: ['persist'])]

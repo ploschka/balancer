@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Exception;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MachineRepository::class)]
 class Machine
@@ -17,9 +18,13 @@ class Machine
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Assert\Type('integer')]
+    #[Assert\Positive]
     private ?int $memory = null;
 
     #[ORM\Column]
+    #[Assert\Type('integer')]
+    #[Assert\Positive]
     private ?int $cpus = null;
 
     /**
@@ -30,9 +35,13 @@ class Machine
     private Collection $processes;
 
     #[ORM\Column]
+    #[Assert\Type('integer')]
+    #[Assert\Positive]
     private ?int $freeMemory = null;
 
     #[ORM\Column]
+    #[Assert\Type('integer')]
+    #[Assert\Positive]
     private ?int $freeCpus = null;
 
     public function __construct()
