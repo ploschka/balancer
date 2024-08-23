@@ -67,10 +67,9 @@ class MachineController extends AbstractController
         {
             foreach ($ps as $p)
             {
-                $mid = $m->getId();
                 $updates[] = [
                     'process_id' => $p->getId(),
-                    'machine_id' => $mid,
+                    'machine_id' => $m->getId(),
                 ];
             }
         }
@@ -98,7 +97,6 @@ class MachineController extends AbstractController
         if (!is_null($m))
         {
             $ps = $this->lb->freeMachine($m);
-            $ps = $ps ?? [];
             foreach ($ps as $p)
             {
                 $mid = $p->getMachine() === null ? null : $p->getMachine()->getId();

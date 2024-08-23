@@ -57,11 +57,20 @@ class ProcessController extends AbstractController
         $this->em->persist($p);
         $this->em->flush();
 
-        $mid = $new_m === null ? null : $new_m->getId();
-        return $this->json([
-            'process_id' => $p->getId(),
-            'machine_id' => $mid,
-        ]);
+        $updates = [];
+        if (is_null($new_m))
+        {
+            $updates = ['process_id' => $p->getId()];
+        }
+        else
+        {
+            $updates = [
+                'process_id' => $p->getId(),
+                'machine_id' => $new_m->getId(),
+            ];
+        }
+
+        return $this->json($updates);
     }
 
     #[Route('/remove', name: 'remove_process')]
